@@ -12,9 +12,10 @@ public class SecurityCheck {
             String url = args[0]; // URL provided as command-line argument
             try {
                 String response = sendGet(url);
-                String key = generateSubscriptionKey();
+                String key = generateSubscriptionKey().trim(); // Trim whitespace from generated key
 
-                System.out.println("Key generated: " + key); // Debug output
+                System.out.println("Generated Key: " + key); // Debug output
+                System.out.println("Response Content: " + response); // Debug output
 
                 if (response.contains(key)) {
                     System.out.println("APPROVED");
@@ -37,8 +38,6 @@ public class SecurityCheck {
         con.setRequestMethod("GET");
 
         int responseCode = con.getResponseCode();
-        System.out.println("Response Code: " + responseCode); // Debug output
-
         BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
         String inputLine;
         StringBuffer response = new StringBuffer();
@@ -48,9 +47,7 @@ public class SecurityCheck {
         }
         in.close();
 
-        System.out.println("Response Content:\n" + response.toString()); // Debug output
-
-        return response.toString(); // Return the response as a String
+        return response.toString();
     }
 
     public static String generateSubscriptionKey() throws Exception {
