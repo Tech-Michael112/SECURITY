@@ -1,59 +1,81 @@
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.MessageDigest;
-import java.util.Base64;
+import java.security.NoSuchAlgorithmException;
+import javax.net.ssl.HttpsURLConnection;
 
-public class SecurityCheck {
-
+public class Main {
+    
+    private static final String HOST = "rentry.co";
+    private static final String PATH = "/igddddd";
+    
     public static void main(String[] args) {
-        if (args.length > 0) {
-            String url = args[0]; // URL provided as command-line argument
-            try {
-                String response = sendGet(url);
-                String key = generateSubscriptionKey().trim(); // Trim whitespace from generated key
-
-                System.out.println("Generated Key: " + key); // Debug output
-                System.out.println("Response Content: " + response); // Debug output
-
-                if (response.contains(key)) {
-                    System.out.println("APPROVED");
-                } else {
-                    System.out.println("DENIED");
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
+        try {
+            String model = System.getProperty("ro.product.model");
+            String httpChat = getRemoteData();
+            String id = generateSubscriptionKey();
+            
+            if (httpChat.contains(id)) {
+                System.out.println("\t\t Wait..... ");
+                System.out.println("\033[1;96m congratulations your key has been approved! !");
+                // Handle further logic after key approval
+            } else {
+                System.out.println(" Your Subscription Key : " + id);
+                System.out.println(" Your device name : " + model);
+                // Handle sending subscription key to admin for approval
+                sendKeyToAdmin(id);
             }
-        } else {
-            System.out.println("No URL provided.");
+            
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
-
-    public static String sendGet(String url) throws Exception {
-        URL obj = new URL(url);
-        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-
-        // Optional default is GET
-        con.setRequestMethod("GET");
-
-        int responseCode = con.getResponseCode();
-        BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-        String inputLine;
-        StringBuffer response = new StringBuffer();
-
-        while ((inputLine = in.readLine()) != null) {
-            response.append(inputLine);
+    
+    private static String getRemoteData() throws Exception {
+        URL url = new URL("https://" + HOST + PATH);
+        HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.setConnectTimeout(5000);
+        conn.setReadTimeout(5000);
+        
+        BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+        StringBuilder response = new StringBuilder();
+        String line;
+        
+        while ((line = reader.readLine()) != null) {
+            response.append(line);
         }
-        in.close();
-
+        
+        reader.close();
+        conn.disconnect();
+        
         return response.toString();
     }
-
-    public static String generateSubscriptionKey() throws Exception {
-        String uniqueData = System.getProperty("user.name");
+    
+    private static String generateSubscriptionKey() throws NoSuchAlgorithmException {
+        String uniqueData = System.getProperty("user.name") + System.getProperty("user.home");
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        byte[] hash = digest.digest(uniqueData.getBytes("UTF-8"));
-        return "KEY" + Base64.getEncoder().encodeToString(hash);
+        byte[] hash = digest.digest(uniqueData.getBytes());
+        
+        StringBuilder hexString = new StringBuilder();
+        for (byte b : hash) {
+            String hex = Integer.toHexString(0xff & b);
+            if (hex.length() == 1) {
+                hexString.append('0');
+            }
+            hexString.append(hex);
+        }
+        
+        return "KEY" + hexString.toString();
+    }
+    
+    private static void sendKeyToAdmin(String id) {
+        try {
+            String url = "https://wa.me/+2348103550060?text=" + id;
+            java.awt.Desktop.getDesktop().browse(new java.net.URI(url));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
