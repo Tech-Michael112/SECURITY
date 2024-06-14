@@ -24,6 +24,9 @@ public class SecurityCheck {
         }
         in.close();
 
+        System.out.println("Response from server:");
+        System.out.println(response.toString()); // Print full response
+
         return response.toString();
     }
 
