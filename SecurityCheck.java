@@ -7,25 +7,25 @@ import java.util.Base64;
 
 public class SecurityCheck {
 
-    private static final String HOST = "rentry.co";
-    private static final String PATH = "/igddddd";
-
     public static void main(String[] args) {
-        try {
-            String response = sendGet("https://" + HOST + PATH);
-            String key = generateSubscriptionKey();
+        if (args.length > 0) {
+            String url = args[0]; // URL provided as command-line argument
+            try {
+                String response = sendGet(url);
+                String key = generateSubscriptionKey();
 
-            if (response.contains(key)) {
-                System.out.println("Congratulations, your key has been approved!");
-                // Implement Instagram logic or any further actions here
-            } else {
-                System.out.println("Your Subscription Key: " + key);
-                System.out.println("Sending the subscription key to admin for approval...");
-                // You can implement further actions like opening a link or sending a message
-                // For example: openLink("https://wa.me/+2348103550060?text=" + key);
+                System.out.println("Key generated: " + key); // Debug output
+
+                if (response.contains(key)) {
+                    System.out.println("APPROVED");
+                } else {
+                    System.out.println("DENIED");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } else {
+            System.out.println("No URL provided.");
         }
     }
 
@@ -37,6 +37,8 @@ public class SecurityCheck {
         con.setRequestMethod("GET");
 
         int responseCode = con.getResponseCode();
+        System.out.println("Response Code: " + responseCode); // Debug output
+
         BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
         String inputLine;
         StringBuffer response = new StringBuffer();
@@ -46,7 +48,9 @@ public class SecurityCheck {
         }
         in.close();
 
-        return response.toString();
+        System.out.println("Response Content:\n" + response.toString()); // Debug output
+
+        return response.toString(); // Return the response as a String
     }
 
     public static String generateSubscriptionKey() throws Exception {
